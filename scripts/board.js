@@ -3,15 +3,26 @@
 
 	var tileWidth = 0;
 	var tileHeight = 0;
+	var canvas, ctx, xtiles, ytiles;
 
-	drawTiles = function(ctx, xtiles, ytiles){
+	draw = function(){
+		clearBoard();
+		drawTiles();
+		drawPieces();
+	}
+
+	drawPieces = function(){
+
+	}
+
+	drawTiles = function(){
 		var topX = 0;
 		var topY = 0;
 		var isWhite = true;
 
 		for(var i=0; i < xtiles; i++){
 			for(var j=0; j < ytiles; j++){
-				console.log("Drawing: " + topX + ", " + topY + " {" + tileWidth + ", " + tileHeight + "}");
+				// console.log("Drawing: " + topX + ", " + topY + " {" + tileWidth + ", " + tileHeight + "}");
 				if(isWhite){
 					ctx.strokeStyle = 'black';
 					ctx.strokeRect(topX, topY, tileWidth, tileHeight);
@@ -30,28 +41,37 @@
 		}
 	}
 
-	setBoardSize = function(canvas, xtiles, ytiles){
+	setBoardSize = function(){
 		tileWidth = Math.round($(window).width() * .10);
 		tileHeight = Math.round($(window).height() * .15);
 
 		canvas.attr("height", ytiles * tileHeight);
 		canvas.attr("width", xtiles * tileWidth);
-		console.log("canvas height: " + canvas.attr('height'));
-		console.log("canvas width: " + canvas.attr('width'));
+		// console.log("canvas height: " + canvas.attr('height'));
+		// console.log("canvas width: " + canvas.attr('width'));
 
 	}
 
-	app.directive('myGameBoard',  function(){
+	clearBoard = function(){
+		ctx.clearRect(0,0,canvas.attr('width'), canvas.attr('height'));
+	}
+
+
+	app.directive('myGameBoard', function($interval){
 		return{
 			restrict: "A",
 			scope: {
 				'gXtiles' : '=',
-				'gYtiles' : '='
+				'gYtiles' : '=',
+			//	'gColored' : '='
 			},
 			link: function(scope, element){
 				//we are doing 2d drawing for this board. Get the canvas context
-				var canvas = $(element[0]);
-				var ctx = element[0].getContext('2d');
+				canvas = $(element[0]);
+				ctx = element[0].getContext('2d');
+				xtiles = scope.gXtiles;
+				ytiles = scope.gYtiles;
+				var buttonDown = false;
 				
 				canvas.css({
 					border: '2px solid black',
@@ -61,16 +81,37 @@
 				});
 
 				//set the canvas size based on the number of tiles
-				setBoardSize(canvas, scope.gXtiles, scope.gYtiles);
+				setBoardSize();
 
 
 				$(window).resize(function(){
-					setBoardSize(canvas, scope.gXtiles, scope.gYtiles);
-					drawTiles(ctx, scope.gXtiles, scope.gYtiles);
+					setBoardSize(scope.gXtiles, scope.gYtiles);
+					draw();
 				});
 
-				//draw the tiles
-				drawTiles(ctx, scope.gXtiles, scope.gYtiles);
+				canvas.on('$destroy', function(){
+					$interval.cancle(gameLoop);
+				});
+
+				canvas.on('mousemove', function(event){
+					if(buttonDown){
+						console.log("x: " + event.pageX + ";y: " + event.pageY);
+					}
+				});
+
+				canvas.on('mousedown', function(){
+					console.log("button down.");
+					buttonDown = true;
+				});
+
+				canvas.on('mouseup', function(){
+					console.log("button up.");
+					buttonDown = false;
+				});
+
+				var gameLoop = $interval(function(){
+					draw();
+				}, 1000);
 			}
 		}
 	});
