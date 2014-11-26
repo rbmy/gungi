@@ -3,73 +3,26 @@
 
 	var tileWidth = 0;
 	var tileHeight = 0;
-	var canvas, ctx, xtiles, ytiles;
+	var canvas, ctx, xtiles, ytiles, board = [];
+
+	var whitePieces = [], blackPieces = [];
 
 	draw = function(){
 		clearBoard();
-		drawTiles();
+		drawBoard();
 		drawPieces();
 	}
 
 	drawPieces = function(){
-		var pieces = {28: 'P', 29: 'P',30: 'P',31: 'P',32: 'P',33: 'P',34: 'P',35: 'P',36: 'P'};
-
-		drawPiece(2, 'P');
-		// $.each(pieces, function(key, value){
-		// 	drawPiece(key, value);
-		// });
+		pieces.forEach(function(element, index){
+			element.draw(ctx);
+		});
 	}
 
-	drawPiece = function(tile, name){
-		//the board is numbered from 1 to 
-		var offset = 10;
-		var origin = {x: tileWidth/2, y: tileHeight/2};
-
-		var center;
-		if(tile == 1){ center = origin;}
-		else{center = {x: origin.x + (tileWidth * (tile-1)), y: origin.y + (tileHeight * (tile-1))}};
-		drawCircle(center.x , center.y , tileWidth/3, "white");
-		drawCircle(center.x , center.y , tileWidth/3 * .80, "white");
-
-		ctx.save();
-		ctx.strokeStyle = 'black';
-		ctx.font = '30px Arial'
-		ctx.strokeText(name, center.x - offset, center.y + offset );
-		ctx.restore();
-	}
-
-	drawTiles = function(){
-		var topX = 0;
-		var topY = 0;
-		var isWhite = true;
-
-		ctx.save();
-
-		ctx.font= '12px Arial';
-		for(var i=0; i < xtiles; i++){
-			counter = i + 1;
-			for(var j=0; j < ytiles; j++){
-				// console.log("Drawing: " + topX + ", " + topY + " {" + tileWidth + ", " + tileHeight + "}");
-				if(isWhite){
-					ctx.strokeStyle = 'black';
-					ctx.strokeRect(topX, topY, tileWidth, tileHeight);
-					ctx.strokeText(topX+tileWidth/2 + ',' + Math.round(topY+tileHeight/2), topX + 10, topY + 10);
-					
-				}else{
-					ctx.strokeStyle = 'white';
-					ctx.fillRect(topX, topY, tileWidth, tileHeight);
-					ctx.strokeText(topX+tileWidth/2 + ',' + Math.round(topY+tileHeight/2), topX + 10, topY + 10);
-					
-				}
-
-				topY += tileHeight;
-				isWhite = !isWhite;
-			}
-			topY = 0;
-			topX += tileWidth;
-		}
-
-		ctx.restore();
+	drawBoard = function(){
+		board.forEach(function(element, index){
+			element.draw(ctx);
+		});
 	}
 
 	setBoardSize = function(){
@@ -77,34 +30,25 @@
 		tileHeight = Math.round($(window).height() * .15);
 
 		canvas.attr("height", ytiles * tileHeight);
-		canvas.attr("width", xtiles * tileWidth);
+		canvas.attr("width", xtiles * tileWidth + 100);
 		// console.log("canvas height: " + canvas.attr('height'));
 		// console.log("canvas width: " + canvas.attr('width'));
+
+		var tileCount = 1, isWhite = true;
+
+		for(var h = 0; h < ytiles; h++){
+			for(var l = 0; l < xtiles; l++){
+				board[tileCount] = new simpleSquare(tileWidth*l, tileHeight*h, tileWidth, tileHeight);
+				if(!isWhite){board[tileCount].setColor('BLACK');}
+				isWhite = !isWhite;
+				tileCount += 1;
+			}
+		}
 
 	}
 
 	clearBoard = function(){
 		ctx.clearRect(0,0,canvas.attr('width'), canvas.attr('height'));
-	}
-
-	drawCircle = function(x, y, radius, color){
-		ctx.save();
-
-		
-		ctx.fillStyle = color;
-		ctx.shadowColor = 'black';
-		ctx.shadowBlur = 20;
-		ctx.shadowOffsetX = 0;
-		ctx.shadowOffsetY = 0;
-		
-		
-		ctx.beginPath();
-		ctx.arc(x, y, radius, 0, Math.PI * 2);
-		ctx.closePath();
-		ctx.fill();
-		ctx.stroke();
-		
-		ctx.restore();
 	}
 
 
@@ -122,8 +66,8 @@
 				ctx = element[0].getContext('2d');
 				xtiles = scope.gXtiles;
 				ytiles = scope.gYtiles;
-				var buttonDown = false;
-				
+				var selectedPiece;
+
 				canvas.css({
 					border: '2px solid black',
 					float: 'left',
@@ -133,6 +77,10 @@
 
 				//set the canvas size based on the number of tiles
 				setBoardSize();
+
+				pieces = [
+					new piece(board[1].getCenter().x, board[1].getCenter().y, tileWidth/3, 'P')
+				];
 
 
 				$(window).resize(function(){
@@ -145,24 +93,38 @@
 				});
 
 				canvas.on('mousemove', function(event){
-					if(buttonDown){
-						console.log("x: " + event.pageX + ";y: " + event.pageY);
+					if(selectedPiece){
+						selectedPiece.move(event.pageX-this.offsetLeft, event.pageY - this.offsetTop);	
 					}
 				});
 
-				canvas.on('mousedown', function(){
-					console.log("button down.");
-					buttonDown = true;
+				canvas.on('mousedown', function(event){
+					offLeft = this.offsetLeft;
+					offTop = this.offsetTop;
+
+					pieces.forEach( function(element, index){
+						if(element.hitTest(Math.round(event.pageX-offLeft), Math.round(event.pageY - offTop))){
+							selectedPiece = element;
+							selectedPiece.highLight('GREEN');
+						}
+					})
 				});
 
-				canvas.on('mouseup', function(){
-					console.log("button up.");
-					buttonDown = false;
+				canvas.on('mouseup', function(event){
+					if(selectedPiece){
+						board.forEach(function(element, index){
+							if(element.hitTest(Math.round(event.pageX-offLeft), Math.round(event.pageY - offTop))){
+								selectedPiece.highLight('BLACK');
+								selectedPiece.move(element.getCenter().x, element.getCenter().y);
+								selectedPiece = null;
+							}
+						})
+					}
 				});
 
 				var gameLoop = $interval(function(){
 					draw();
-				}, 1000);
+				}, 1000/60);
 			}
 		}
 	});
