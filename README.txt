@@ -70,4 +70,4 @@ Pawn ———————- Gold (1)
 
 * [Go (Game)](en.wikipedia.org/wiki/Go_(game))
 * [Shogi](en.wikipedia.org/wiki/Shogi)
-* [English Translation of Nishitsuji's Rules](http://hiromalo.tumblr.com/post/74510568781/rules-of-gungi)
+* [English Translation of Nishitsuji's Rules](https://mmmmalo.tumblr.com/post/74510568781/rules-of-gungi)
