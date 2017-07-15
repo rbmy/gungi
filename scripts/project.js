@@ -1,3 +1,3 @@
 (function(){
-	var app = angular.module('project', ['board']);
+	var app = angular.module('project', ['board', 'info']);
 })();

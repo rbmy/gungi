@@ -26,11 +26,13 @@
 	}
 
 	setBoardSize = function(){
-		tileWidth = Math.round($(window).width() * .10);
-		tileHeight = Math.round($(window).height() * .15);
+		tileWidth = Math.round($(window).width() * .08);
+		tileHeight = Math.round($(window).height() * .12);
 
+		//canvas.attr("height", 900);
+		//canvas.attr("width", 900);
 		canvas.attr("height", ytiles * tileHeight);
-		canvas.attr("width", xtiles * tileWidth + 100);
+		canvas.attr("width", xtiles * tileWidth);
 		// console.log("canvas height: " + canvas.attr('height'));
 		// console.log("canvas width: " + canvas.attr('width'));
 
